@@ -47,6 +47,8 @@ import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.lz4.LZ4SafeDecompressor;
 
+import org.apache.commons.compress.*;
+
 public class RedisClient extends DB {
 
     private Jedis jedis;
@@ -60,7 +62,7 @@ public class RedisClient extends DB {
 
     public static final String COMPRESS = "redis.compress"; // y, n
     public static final String COMPRESS_ALGO = "redis.compress-algo"; // lz4, lz4hc
-    public static final String COMPRESS_LEVEL = "redis.compression-level" // 1-17 for lz4
+    public static final String COMPRESS_LEVEL = "redis.compression-level"; // 1-17 for lz4
     public static final String CLUSTER = "redis.cluster"; // y, n
     public static final String HOST_PROPERTY = "redis.host";
     public static final String PORT_PROPERTY = "redis.port";
@@ -72,7 +74,7 @@ public class RedisClient extends DB {
     {
         if (compress != null && compress.equals("y"))
         {
-            if (compressAlgo != null && (compressAlgo.equals("lz4") || compressAlgo.equals("lz4hc"))
+            if (compressAlgo != null && (compressAlgo.equals("lz4") || compressAlgo.equals("lz4hc")))
             {
                 byte[] data = st.getBytes();
                 LZ4Compressor compressor;
@@ -100,7 +102,7 @@ public class RedisClient extends DB {
     {
         if (compress != null && compress.equals("y"))
         {
-            if (compressAlgo != null && (compressAlgo.equals("lz4") || compressAlgo.equals("lz4hc"))
+            if (compressAlgo != null && (compressAlgo.equals("lz4") || compressAlgo.equals("lz4hc")))
             {
                 int split = st.indexOf('|');
                 final int decompressedLength = Integer.parseInt(st.substring(0, split));
