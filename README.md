@@ -31,22 +31,26 @@ Getting Started
 
 1. Download the latest release of YCSB:
 
-    ```sh
-    curl -O --location https://github.com/brianfrankcooper/YCSB/releases/download/0.3.1/ycsb-0.3.1.tar.gz
-    tar xfvz ycsb-0.3.1.tar.gz
-    cd ycsb-0.3.1
-    ```
+    For our experiment we only need to clone this repo. // QIMING CHEN
     
 2. Set up a database to benchmark. There is a README file under each binding 
    directory.
+    
+    We can skip this // QIMING CHEN
 
 3. Run YCSB command. 
     
+    For our experiment we use this: // QIMING CHEN
     ```sh
-    bin/ycsb load basic -P workloads/workloada
-    bin/ycsb run basic -P workloads/workloada
+    sudo ./bin/ycsb load redis -s -P workloads/workloada -p "redis.host=50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180" -p "redis.port=6379;6380;6381;6382;6383;6384" -p "redis.cluster=y" -p "redis.compress=y" -p "redis.compress-algo=lz4" > outputLoad.txt
     ```
-
+    
+    The following command runs ycsb in a command line interface:
+    ```sh
+    sudo ./bin/ycsb shell redis -p "redis.host=50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180" -p "redis.port=6379;6380;6381;6382;6383;6384" -p "redis.cluster=y" -p "redis.compress=y" -p "redis.compress-algo=lz4"
+    ```
+    Those command will rebuild YCSB if you modified it.
+    
   Running the `ycsb` command without any argument will print the usage. 
    
   See https://github.com/brianfrankcooper/YCSB/wiki/Running-a-Workload
@@ -54,14 +58,3 @@ Getting Started
 
   See https://github.com/brianfrankcooper/YCSB/wiki/Core-Properties for 
   the list of available workload properties.
-
-Building from source
---------------------
-
-To build the full distribution, with all database bindings:
-
-    mvn clean package
-
-To build a single database binding:
-
-    mvn -pl com.yahoo.ycsb:mongodb-binding -am clean package
