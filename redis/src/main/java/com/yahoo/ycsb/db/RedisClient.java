@@ -49,6 +49,7 @@ public class RedisClient extends DB {
     private Jedis jedis;
     private JedisCluster jedisCluster;
     private boolean cluster;
+    private int slaveCount;
 
     static String compress;
     static String compressAlgo;
@@ -57,10 +58,10 @@ public class RedisClient extends DB {
 
     public static final String COMPRESS = "redis.compress"; // y, n
     public static final String COMPRESS_ALGO = "redis.compress-algo"; // lz4, lz4hc, bzip2, snappy
-    public static final String COMPRESS_LEVEL = "redis.compression-level"; // 1-17 for lz4
     public static final String CLUSTER = "redis.cluster"; // y, n
     public static final String HOST_PROPERTY = "redis.host";
     public static final String PORT_PROPERTY = "redis.port";
+    public static final String SLAVE_COUNT = "redis.slave-count";
     public static final String PASSWORD_PROPERTY = "redis.password";
 
     public static final String INDEX_KEY = "_indices";
@@ -199,7 +200,7 @@ public class RedisClient extends DB {
         String password = props.getProperty(PASSWORD_PROPERTY);
         String compress = props.getProperty(COMPRESS);
         String compressAlgo = props.getProperty(COMPRESS_ALGO);
-        String compressLevel = props.getProperty(COMPRESS_LEVEL);
+        slaveCount = Integer.parseInt(props.getProperty(SLAVE_COUNT));
 
         // compress
         lz4factory = LZ4Factory.fastestInstance();
@@ -250,7 +251,7 @@ public class RedisClient extends DB {
             }
             jedisCluster = new JedisCluster(hostsAndPorts, 5000, 1000);
             if (password != null) {
-                jedisCluster.auth(password);
+                //jedisCluster.auth(password);
             }
         }
         else
@@ -265,7 +266,7 @@ public class RedisClient extends DB {
             jedis = new Jedis(host, port);
             jedis.connect();
             if (password != null) {
-                jedis.auth(password);
+                //jedis.auth(password);
             }
         }
     }
@@ -328,6 +329,7 @@ public class RedisClient extends DB {
         {
             if (jedisCluster.hmset(key, StringByteIterator.getStringMap(values)).equals("OK")) {
                 jedisCluster.zadd(INDEX_KEY, hash(key), key);
+                jedisCluster.wait(key, slaveCount, 0);
                 return 0;
             }
         }
@@ -335,6 +337,7 @@ public class RedisClient extends DB {
         {
             if (jedis.hmset(key, StringByteIterator.getStringMap(values)).equals("OK")) {
                 jedis.zadd(INDEX_KEY, hash(key), key);
+                jedisCluster.wait(key, slaveCount, 0);
                 return 0;
             }
         }
@@ -346,11 +349,15 @@ public class RedisClient extends DB {
     {
         if (cluster)
         {
-            return jedisCluster.del(key) == 0 && jedisCluster.zrem(INDEX_KEY, key) == 0 ? 1 : 0;
+            int ret = jedisCluster.del(key) == 0 && jedisCluster.zrem(INDEX_KEY, key) == 0 ? 1 : 0;
+            jedisCluster.wait(key, slaveCount, 0);
+            return ret;
         }
         else
         {
-            return jedis.del(key) == 0 && jedis.zrem(INDEX_KEY, key) == 0 ? 1 : 0;
+            int ret = jedis.del(key) == 0 && jedis.zrem(INDEX_KEY, key) == 0 ? 1 : 0;
+            jedisCluster.wait(key, slaveCount, 0);
+            return ret;
         }
     }
 
@@ -363,11 +370,15 @@ public class RedisClient extends DB {
         }
         if (cluster)
         {
-            return jedisCluster.hmset(key, StringByteIterator.getStringMap(values)).equals("OK") ? 0 : 1;
+            int ret = jedisCluster.hmset(key, StringByteIterator.getStringMap(values)).equals("OK") ? 0 : 1;
+            jedisCluster.wait(key, slaveCount, 0);
+            return ret;
         }
         else
         {
-            return jedis.hmset(key, StringByteIterator.getStringMap(values)).equals("OK") ? 0 : 1;
+            int ret = jedis.hmset(key, StringByteIterator.getStringMap(values)).equals("OK") ? 0 : 1;
+            jedisCluster.wait(key, slaveCount, 0);
+            return ret;
         }
     }
 
