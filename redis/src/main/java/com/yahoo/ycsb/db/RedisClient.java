@@ -28,14 +28,8 @@ import com.yahoo.ycsb.DBException;
 import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.StringByteIterator;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
 import java.util.*;
+import java.io.*;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Protocol;
@@ -47,7 +41,8 @@ import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.lz4.LZ4SafeDecompressor;
 
-import org.apache.commons.compress.*;
+import org.apache.commons.compress.compressors.bzip2.*;
+import org.xerial.snappy.Snappy;
 
 public class RedisClient extends DB {
 
@@ -61,7 +56,7 @@ public class RedisClient extends DB {
     static LZ4Factory lz4factory;
 
     public static final String COMPRESS = "redis.compress"; // y, n
-    public static final String COMPRESS_ALGO = "redis.compress-algo"; // lz4, lz4hc
+    public static final String COMPRESS_ALGO = "redis.compress-algo"; // lz4, lz4hc, bzip2, snappy
     public static final String COMPRESS_LEVEL = "redis.compression-level"; // 1-17 for lz4
     public static final String CLUSTER = "redis.cluster"; // y, n
     public static final String HOST_PROPERTY = "redis.host";
@@ -94,6 +89,40 @@ public class RedisClient extends DB {
                 String ret = decompressedLength + "|" + new String(compressed2);
                 return ret;
             }
+            else if (compressAlgo != null && compressAlgo.equals("bzip2"))
+            {
+                try
+                {
+                    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(st.getBytes());
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    BZip2CompressorOutputStream bzOut = new BZip2CompressorOutputStream(baos);
+                    final byte[] buffer = new byte[8192];
+                    int n = 0;
+                    while (-1 != (n = byteArrayInputStream.read(buffer)))
+                    {
+                        bzOut.write(buffer, 0, n);
+                    }
+                    bzOut.close();
+                    return new String(baos.toByteArray());
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            else if (compressAlgo != null && compressAlgo.equals("snappy"))
+            {
+                try
+                {
+                    byte[] compressed = Snappy.compress(st.getBytes());
+                    String ret = new String(compressed);
+                    return ret;
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
         }
         return st;
     }
@@ -112,6 +141,40 @@ public class RedisClient extends DB {
                 decompressor.decompress(compressed, 0, restored, 0, decompressedLength);
                 String ret = new String(restored);
                 return ret;
+            }
+            else if (compressAlgo != null && compressAlgo.equals("bzip2"))
+            {
+                try
+                {
+                    InputStream in = new StringBufferInputStream(st);
+                    BZip2CompressorInputStream bzIn = new BZip2CompressorInputStream(in);
+                    byte[] data = st.getBytes();
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    int n = 0;
+                    while (-1 != (n = bzIn.read(data)))
+                    {
+                        baos.write(data, 0, n);
+                    }
+                    bzIn.close();
+                    return baos.toString();
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            else if (compressAlgo != null && compressAlgo.equals("snappy"))
+            {
+                try
+                {
+                    byte[] uncompressed = Snappy.uncompress(st.getBytes());
+                    String ret = new String(uncompressed);
+                    return ret;
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
             }
         }
         return st;
@@ -136,6 +199,7 @@ public class RedisClient extends DB {
         String password = props.getProperty(PASSWORD_PROPERTY);
         String compress = props.getProperty(COMPRESS);
         String compressAlgo = props.getProperty(COMPRESS_ALGO);
+        String compressLevel = props.getProperty(COMPRESS_LEVEL);
 
         // compress
         lz4factory = LZ4Factory.fastestInstance();
