@@ -203,7 +203,7 @@ public class RedisClient extends DB {
         String compress = props.getProperty(COMPRESS);
         String compressAlgo = props.getProperty(COMPRESS_ALGO);
         slaveCount = Integer.parseInt(props.getProperty(SLAVE_COUNT));
-        sync = (props.getProperty(SLAVE_COUNT) != null && props.getProperty(SLAVE_COUNT).equals("y"));
+        sync = (props.getProperty(SYNC) != null && props.getProperty(SYNC).equals("y"));
 
         // compress
         lz4factory = LZ4Factory.fastestInstance();
