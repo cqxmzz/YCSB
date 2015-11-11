@@ -42,14 +42,10 @@ Getting Started
     
     For our experiment we use this: // QIMING CHEN
     ```sh
-    sudo ./bin/ycsb load redis -s -P workloads/workloada -p "redis.host=50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180" -p "redis.port=6379;6380;6381;6382;6383;6384" -p "redis.cluster=y" -p "redis.compress=y" -p "redis.compress-algo=lz4" -p "redis.slave-count=3"    
+    ./bin/ycsb load redis -s -P workloads/workloada -p "redis.host=127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1" -p "redis.port=6379;6380;6381;6382;6383;6384" -p "redis.cluster=y" -p "redis.compress=y" -p "redis.compress-algo=snappy" -p "redis.slave-count=1" -p "redis.sync=n"
     ```
     
-    The following command runs ycsb in a command line interface:
-    ```sh
-    sudo ./bin/ycsb shell redis -p "redis.host=50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180;50.112.164.180" -p "redis.port=6379;6380;6381;6382;6383;6384" -p "redis.cluster=y" -p "redis.compress=y" -p "redis.compress-algo=lz4"
-    ```
-    Those command will rebuild YCSB if you modified it.
+    The command will rebuild YCSB if you modified it.
     
   Running the `ycsb` command without any argument will print the usage. 
    
