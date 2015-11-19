@@ -54,7 +54,7 @@ LICENSE file.
       <artifactId>jedis</artifactId>
       <version>3.0.0</version>
       <scope>system</scope>
-      <systemPath>/Users/chenqiming/Desktop/jedis/target/jedis-3.0.0.jar</systemPath>
+      <systemPath>/home/ec2-user/jedis/target/jedis-3.0.0.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>com.yahoo.ycsb</groupId>

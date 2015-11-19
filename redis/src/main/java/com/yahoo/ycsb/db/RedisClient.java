@@ -70,18 +70,19 @@ public class RedisClient extends DB {
 
     public static String compressWithLog(String st)
     {
-        long start_time = System.currentTimeMillis();
+        long start_time = System.nanoTime();
         String ret = compress(st);
         try {
-            long end_time = System.currentTimeMillis();
-            long time = start_time - end_time;
+            long end_time = System.nanoTime();
+            long time = end_time - start_time;
             BufferedWriter bw = new BufferedWriter(new FileWriter("compress_time.txt", true));
-            bw.write((int) time);
+            bw.write("" + time);
             bw.newLine();
             bw.flush();
             BufferedWriter bw2 = new BufferedWriter(new FileWriter("compress_rate.txt", true));
-            double r = st.length();
-            r = r / ret.length();
+            double r1 = ret.length();
+            double r2 = st.length();
+            double r = r1 / r2;
             bw2.write("" + r);
             bw2.newLine();
             bw2.flush();
@@ -91,13 +92,13 @@ public class RedisClient extends DB {
 
     public static String decompressWithLog(String st)
     {
-        long start_time = System.currentTimeMillis();
+        long start_time = System.nanoTime();
         String ret = decompress(st);
         try {
-            long end_time = System.currentTimeMillis();
-            long time = start_time - end_time;
+            long end_time = System.nanoTime();
+            long time = end_time - start_time;
             BufferedWriter bw = new BufferedWriter(new FileWriter("compress_time.txt", true));
-            bw.write((int) time);
+            bw.write("" +  time);
             bw.newLine();
             bw.flush();
         } catch(Exception e) {}
