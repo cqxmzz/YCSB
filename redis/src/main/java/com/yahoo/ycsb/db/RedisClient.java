@@ -68,6 +68,42 @@ public class RedisClient extends DB {
 
     public static final String INDEX_KEY = "_indices";
 
+    public static String compressWithLog(String st)
+    {
+        long start_time = System.currentTimeMillis();
+        String ret = compress(st);
+        try {
+            long end_time = System.currentTimeMillis();
+            long time = start_time - end_time;
+            BufferedWriter bw = new BufferedWriter(new FileWriter("compress_time.txt", true));
+            bw.write((int) time);
+            bw.newLine();
+            bw.flush();
+            BufferedWriter bw2 = new BufferedWriter(new FileWriter("compress_rate.txt", true));
+            double r = st.length();
+            r = r / ret.length();
+            bw2.write("" + r);
+            bw2.newLine();
+            bw2.flush();
+        } catch (Exception e) {}
+        return ret;
+    }
+
+    public static String decompressWithLog(String st)
+    {
+        long start_time = System.currentTimeMillis();
+        String ret = decompress(st);
+        try {
+            long end_time = System.currentTimeMillis();
+            long time = start_time - end_time;
+            BufferedWriter bw = new BufferedWriter(new FileWriter("compress_time.txt", true));
+            bw.write((int) time);
+            bw.newLine();
+            bw.flush();
+        } catch(Exception e) {}
+        return ret;
+    }
+
     public static String compress(String st)
     {
         if (compress != null && compress.equals("y"))
@@ -185,12 +221,12 @@ public class RedisClient extends DB {
 
     public static ByteIterator compress(ByteIterator bi)
     {
-        return new StringByteIterator(compress(bi.toString()));
+        return new StringByteIterator(compressWithLog(bi.toString()));
     }
 
     public static ByteIterator decompress(ByteIterator bi)
     {
-        return new StringByteIterator(decompress(bi.toString()));
+        return new StringByteIterator(decompressWithLog(bi.toString()));
     }
 
     public void init() throws DBException {
