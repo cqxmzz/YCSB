@@ -58,7 +58,7 @@ public class RedisClient extends DB {
     static LZ4Factory lz4factory;
 
     public static final String COMPRESS = "redis.compress"; // y, n
-    public static final String COMPRESS_ALGO = "redis.compress-algo"; // lz4, lz4hc, bzip2, snappy
+    public static final String COMPRESS_ALGO = "redis.algo"; // lz4, lz4hc, bzip2, snappy
     public static final String CLUSTER = "redis.cluster"; // y, n
     public static final String HOST_PROPERTY = "redis.host";
     public static final String PORT_PROPERTY = "redis.port";
@@ -82,7 +82,7 @@ public class RedisClient extends DB {
             BufferedWriter bw2 = new BufferedWriter(new FileWriter("compress_rate.txt", true));
             double r1 = ret.length();
             double r2 = st.length();
-            double r = r1 / r2;
+            double r = r1 / r2; 
             bw2.write("" + r);
             bw2.newLine();
             bw2.flush();
@@ -94,6 +94,10 @@ public class RedisClient extends DB {
     {
         long start_time = System.nanoTime();
         String ret = decompress(st);
+        System.out.println(st);
+        System.out.println("!");
+        System.out.println(ret);
+        System.out.println("?");
         try {
             long end_time = System.nanoTime();
             long time = end_time - start_time;
@@ -237,8 +241,8 @@ public class RedisClient extends DB {
         String hostString = props.getProperty(HOST_PROPERTY);
         String portString = props.getProperty(PORT_PROPERTY);
         String password = props.getProperty(PASSWORD_PROPERTY);
-        String compress = props.getProperty(COMPRESS);
-        String compressAlgo = props.getProperty(COMPRESS_ALGO);
+        compress = props.getProperty(COMPRESS);
+        compressAlgo = props.getProperty(COMPRESS_ALGO);
         slaveCount = Integer.parseInt(props.getProperty(SLAVE_COUNT));
         sync = (props.getProperty(SYNC) != null && props.getProperty(SYNC).equals("y"));
 
@@ -332,6 +336,7 @@ public class RedisClient extends DB {
     @Override
     public int read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result)
     {
+        System.out.println("@@@");
         if (fields == null) {
             StringByteIterator.putAllAsByteIterators(result, jedis.hgetAll(key));
         }
