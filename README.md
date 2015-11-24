@@ -43,6 +43,7 @@ Getting Started
     For our experiment we use this: // QIMING CHEN
     ```sh
     ./bin/ycsb load redis -s -P workloads/workloada -p "redis.host=127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1" -p "redis.port=6379;6380;6381;6382;6383;6384" -p "redis.cluster=y" -p "redis.compress=y" -p "redis.compress-algo=snappy" -p "redis.slave-count=1" -p "redis.sync=n"
+    ./bin/ycsb run redis -s -P workloads/workloada -p "redis.host=127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1" -p "redis.port=6379;6380;6381;6382;6383;6384" -p "redis.cluster=y" -p "redis.compress=y" -p "redis.compress-algo=snappy" -p "redis.slave-count=1" -p "redis.sync=n"
     ```
     
     The command will rebuild YCSB if you modified it.

@@ -336,9 +336,12 @@ public class RedisClient extends DB {
     @Override
     public int read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result)
     {
-        System.out.println("@@@");
-        if (fields == null) {
-            StringByteIterator.putAllAsByteIterators(result, jedis.hgetAll(key));
+        if (fields == null)
+        {
+            if (cluster)
+                StringByteIterator.putAllAsByteIterators(result, jedisCluster.hgetAll(key));
+            else
+                StringByteIterator.putAllAsByteIterators(result, jedis.hgetAll(key));
         }
         else {
             String[] fieldArray = (String[])fields.toArray(new String[fields.size()]);
