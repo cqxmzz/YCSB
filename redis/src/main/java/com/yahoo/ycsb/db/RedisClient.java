@@ -94,14 +94,10 @@ public class RedisClient extends DB {
     {
         long start_time = System.nanoTime();
         String ret = decompress(st);
-        System.out.println(st);
-        System.out.println("!");
-        System.out.println(ret);
-        System.out.println("?");
         try {
             long end_time = System.nanoTime();
             long time = end_time - start_time;
-            BufferedWriter bw = new BufferedWriter(new FileWriter("compress_time.txt", true));
+            BufferedWriter bw = new BufferedWriter(new FileWriter("decompress_time.txt", true));
             bw.write("" +  time);
             bw.newLine();
             bw.flush();
