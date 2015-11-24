@@ -338,10 +338,23 @@ public class RedisClient extends DB {
     {
         if (fields == null)
         {
+
             if (cluster)
-                StringByteIterator.putAllAsByteIterators(result, jedisCluster.hgetAll(key));
+            {
+                Map<String, String> in = jedisCluster.hgetAll(key);
+                for(String s: in.keySet())
+                {
+                    result.put(s, decompress(new StringByteIterator(in.get(s))));
+                }
+            }
             else
-                StringByteIterator.putAllAsByteIterators(result, jedis.hgetAll(key));
+            {
+                Map<String, String> in = jedis.hgetAll(key);
+                for(String s: in.keySet())
+                {
+                    result.put(s, decompress(new StringByteIterator(in.get(s))));
+                }
+            }
         }
         else {
             String[] fieldArray = (String[])fields.toArray(new String[fields.size()]);
