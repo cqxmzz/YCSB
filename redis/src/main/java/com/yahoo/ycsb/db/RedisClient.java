@@ -70,6 +70,8 @@ public class RedisClient extends DB {
 
     public static String compressWithLog(String st)
     {
+        // System.out.println("compress");
+        // System.out.println(st.substring(0, 20));
         long start_time = System.nanoTime();
         String ret = compress(st);
         try {
@@ -87,11 +89,15 @@ public class RedisClient extends DB {
             bw2.newLine();
             bw2.flush();
         } catch (Exception e) {}
+        // System.out.println("compressed");
+        // System.out.println(ret.substring(0, 20));
         return ret;
     }
 
     public static String decompressWithLog(String st)
     {
+        // System.out.println("decompress");
+        // System.out.println(st.substring(0, 20));
         long start_time = System.nanoTime();
         String ret = decompress(st);
         try {
@@ -102,6 +108,8 @@ public class RedisClient extends DB {
             bw.newLine();
             bw.flush();
         } catch(Exception e) {}
+        // System.out.println("decompressed");
+        // System.out.println(ret.substring(0, 20));
         return ret;
     }
 
@@ -111,29 +119,33 @@ public class RedisClient extends DB {
         {
             if (compressAlgo != null && (compressAlgo.equals("lz4") || compressAlgo.equals("lz4hc")))
             {
-                byte[] data = st.getBytes();
-                LZ4Compressor compressor;
-                if (compressAlgo.equals("lz4"))
-                {
-                    compressor = lz4factory.fastCompressor();
+                try {
+                    byte[] data = st.getBytes("ISO-8859-1");
+                    LZ4Compressor compressor;
+                    if (compressAlgo.equals("lz4"))
+                    {
+                        compressor = lz4factory.fastCompressor();
+                    }
+                    else
+                    {
+                        compressor = lz4factory.highCompressor();
+                    }
+                    final int decompressedLength = data.length;
+                    int maxCompressedLength = compressor.maxCompressedLength(decompressedLength);
+                    byte[] compressed = new byte[maxCompressedLength];
+                    int compressedLength = compressor.compress(data, 0, decompressedLength, compressed, 0, maxCompressedLength);
+                    byte[] compressed2 = Arrays.copyOf(compressed, compressedLength);
+                    String ret = decompressedLength + "|" + new String(compressed2, "ISO-8859-1");
+                    return ret;
+                } catch (Exception e) {                
+                    e.printStackTrace();
                 }
-                else
-                {
-                    compressor = lz4factory.highCompressor();
-                }
-                final int decompressedLength = data.length;
-                int maxCompressedLength = compressor.maxCompressedLength(decompressedLength);
-                byte[] compressed = new byte[maxCompressedLength];
-                int compressedLength = compressor.compress(data, 0, decompressedLength, compressed, 0, maxCompressedLength);
-                byte[] compressed2 = Arrays.copyOf(compressed, compressedLength);
-                String ret = decompressedLength + "|" + new String(compressed2);
-                return ret;
             }
             else if (compressAlgo != null && compressAlgo.equals("bzip2"))
             {
                 try
                 {
-                    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(st.getBytes());
+                    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(st.getBytes("ISO-8859-1"));
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     BZip2CompressorOutputStream bzOut = new BZip2CompressorOutputStream(baos);
                     final byte[] buffer = new byte[8192];
@@ -143,7 +155,7 @@ public class RedisClient extends DB {
                         bzOut.write(buffer, 0, n);
                     }
                     bzOut.close();
-                    return new String(baos.toByteArray());
+                    return new String(baos.toByteArray(), "ISO-8859-1");
                 }
                 catch(Exception e)
                 {
@@ -154,8 +166,8 @@ public class RedisClient extends DB {
             {
                 try
                 {
-                    byte[] compressed = Snappy.compress(st.getBytes());
-                    String ret = new String(compressed);
+                    byte[] compressed = Snappy.compress(st, "ISO-8859-1");
+                    String ret = new String(compressed, "ISO-8859-1");
                     return ret;
                 }
                 catch(Exception e)
@@ -173,14 +185,18 @@ public class RedisClient extends DB {
         {
             if (compressAlgo != null && (compressAlgo.equals("lz4") || compressAlgo.equals("lz4hc")))
             {
-                int split = st.indexOf('|');
-                final int decompressedLength = Integer.parseInt(st.substring(0, split));
-                LZ4FastDecompressor decompressor = lz4factory.fastDecompressor();
-                byte[] restored = new byte[decompressedLength];
-                byte[] compressed = st.substring(split+1, st.length()).getBytes();
-                decompressor.decompress(compressed, 0, restored, 0, decompressedLength);
-                String ret = new String(restored);
-                return ret;
+                try {
+                    int split = st.indexOf('|');
+                    final int decompressedLength = Integer.parseInt(st.substring(0, split));
+                    LZ4FastDecompressor decompressor = lz4factory.fastDecompressor();
+                    byte[] restored = new byte[decompressedLength];
+                    byte[] compressed = st.substring(split+1, st.length()).getBytes("ISO-8859-1");
+                    decompressor.decompress(compressed, 0, restored, 0, decompressedLength);
+                    String ret = new String(restored, "ISO-8859-1");
+                    return ret;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             else if (compressAlgo != null && compressAlgo.equals("bzip2"))
             {
@@ -188,7 +204,7 @@ public class RedisClient extends DB {
                 {
                     InputStream in = new StringBufferInputStream(st);
                     BZip2CompressorInputStream bzIn = new BZip2CompressorInputStream(in);
-                    byte[] data = st.getBytes();
+                    byte[] data = st.getBytes("ISO-8859-1");
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     int n = 0;
                     while (-1 != (n = bzIn.read(data)))
@@ -207,8 +223,8 @@ public class RedisClient extends DB {
             {
                 try
                 {
-                    byte[] uncompressed = Snappy.uncompress(st.getBytes());
-                    String ret = new String(uncompressed);
+                    byte[] uncompressed = Snappy.uncompress(st.getBytes("ISO-8859-1"));
+                    String ret = new String(uncompressed, "ISO-8859-1");
                     return ret;
                 }
                 catch(Exception e)
@@ -243,8 +259,7 @@ public class RedisClient extends DB {
         sync = (props.getProperty(SYNC) != null && props.getProperty(SYNC).equals("y"));
 
         // compress
-        lz4factory = LZ4Factory.fastestInstance();
-
+        lz4factory = LZ4Factory.safeInstance();
 
         if (clusterString != null && clusterString.equals("y"))
         {
