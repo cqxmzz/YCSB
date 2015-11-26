@@ -16,37 +16,23 @@
  */
 package com.yahoo.ycsb;
 
-public class ByteArrayByteIterator extends ByteIterator {
-	byte[] str;
-	int off;
-	final int len;
-	public ByteArrayByteIterator(byte[] s) {
-		this.str = s;
-		this.off = 0;
-		this.len = s.length;
-	}
+import java.io.RandomAccessFile;
 
-	public ByteArrayByteIterator(byte[] s, int off, int len) {
-		this.str = s;
-		this.off = off;
-		this.len = off + len;
-	}
+public class FileByteIteratorFactory {
+    private byte[] buf;
 
-	@Override
-	public boolean hasNext() {
-		return off < len;
-	}
+    public FileByteIteratorFactory(String fileName) {
+        try {
+            RandomAccessFile f = new RandomAccessFile(fileName, "r");
+            byte[] b = new byte[(int)f.length()];
+            f.read(b);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	public byte nextByte() {
-		byte ret = str[off % str.length];
-		off++;
-		return ret;
-	}
-
-	@Override
-	public long bytesLeft() {
-		return len - off;
-	}
-
+    public ByteIterator fileByteIterator(int len) {
+        int off = Utils.random().nextInt() % buf.length;
+        return new ByteArrayByteIterator(buf, off, len);
+    }
 }

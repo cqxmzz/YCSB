@@ -291,6 +291,16 @@ public class CoreWorkload extends Workload
    * Default value of the percentage operations accessing the hot set.
    */
   public static final String HOTSPOT_OPN_FRACTION_DEFAULT = "0.8";
+
+  public static final String FILE_BYTE_ITERATOR = "filebyteiterator";
+
+  public static final String FILE_BYTE_ITERATOR_DEFAULT = "";
+
+  private FileByteIteratorFactory fileByteIteratorFactory;
+
+  private boolean useFileByteIterator;
+
+  private String fileByteIteratorFileName;
 	
 	IntegerGenerator keysequence;
 
@@ -339,6 +349,13 @@ public class CoreWorkload extends Workload
 	 */
 	public void init(Properties p) throws WorkloadException
 	{
+		fileByteIteratorFileName = p.getProperty(FILE_BYTE_ITERATOR,FILE_BYTE_ITERATOR_DEFAULT);
+		if (fileByteIteratorFileName.equals(FILE_BYTE_ITERATOR_DEFAULT)) {
+			useFileByteIterator = false;
+		} else {
+			useFileByteIterator = true;
+			fileByteIteratorFactory = new FileByteIteratorFactory(fileByteIteratorFileName);
+		}
 		table = p.getProperty(TABLENAME_PROPERTY,TABLENAME_PROPERTY_DEFAULT);
 		
 		fieldcount=Integer.parseInt(p.getProperty(FIELD_COUNT_PROPERTY,FIELD_COUNT_PROPERTY_DEFAULT));
@@ -491,7 +508,11 @@ public class CoreWorkload extends Workload
       data = new StringByteIterator(buildDeterministicValue(key, fieldkey));
     } else {
       //fill with random data
-      data = new RandomByteIterator(fieldlengthgenerator.nextInt());
+      if (useFileByteIterator) {
+      	data = fileByteIteratorFactory.fileByteIterator(fieldlengthgenerator.nextInt());
+      } else {
+      	data = new RandomByteIterator(fieldlengthgenerator.nextInt());
+  	  }
     }
     value.put(fieldkey,data);
 
@@ -510,7 +531,11 @@ public class CoreWorkload extends Workload
         data = new StringByteIterator(buildDeterministicValue(key, fieldkey));
       } else {
         //fill with random data
-        data = new RandomByteIterator(fieldlengthgenerator.nextInt());
+        if (useFileByteIterator) {
+      	  data = fileByteIteratorFactory.fileByteIterator(fieldlengthgenerator.nextInt());
+      	} else {
+          data = new RandomByteIterator(fieldlengthgenerator.nextInt());
+  	  	}
       }
       values.put(fieldkey,data);
     }
