@@ -32,7 +32,7 @@ public class FileByteIteratorFactory {
     }
 
     public ByteIterator fileByteIterator(int len) {
-        int off = Utils.random().nextInt() % buf.length;
+        int off = ((Utils.random().nextInt() % buf.length) + buf.length) % buf.length;
         return new ByteArrayByteIterator(buf, off, len);
     }
 }
