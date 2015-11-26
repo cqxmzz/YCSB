@@ -24,8 +24,8 @@ public class FileByteIteratorFactory {
     public FileByteIteratorFactory(String fileName) {
         try {
             RandomAccessFile f = new RandomAccessFile(fileName, "r");
-            byte[] b = new byte[(int)f.length()];
-            f.read(b);
+            buf = new byte[(int)f.length()];
+            f.read(buf);
         } catch (Exception e) {
             e.printStackTrace();
         }
