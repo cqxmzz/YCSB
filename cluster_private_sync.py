@@ -63,21 +63,17 @@ def create_workload_file(tmp_file, fieldlength, r_perc_str, i_perc_str, txt_file
     os.system(cmd)
 
 def restart_redis():
-    cmd = "pkill -f redis-server"
-    os.system(cmd)
-    time.sleep(10)
-    cmd = "redis-server standalone_redis.conf&"
+    cmd = "cd /home/ec2-user/redis-3.0.5/utils/create-cluster && ./auto-private.sh"
     os.system(cmd)
     time.sleep(5)
 
-
 if __name__ == "__main__":
-    name = "standalone"
+    name = "cluster_private_sync"
     dirname = "result_" + name
     os.system("mkdir " + dirname)
 
     text = ["wiki_long_all.txt"]
-    work_load_read_percent = [0, 25, 50, 75, 100]
+    work_load_read_percent = [0, 100]
     conf_algo = ["none", "lz4", "lz4hc", "bzip2", "snappy"]
     conf_compress = ["n", "y", "y", "y", "y"]
     record_size = [100, 1000, 10000, 100000]
@@ -89,6 +85,7 @@ if __name__ == "__main__":
     os.system(cmd)
     cmd = "rm " + name + ".log"
     os.system(cmd)
+    testmode = False
 
     for txt_file in text:
         for r_perc in work_load_read_percent:
@@ -124,23 +121,26 @@ if __name__ == "__main__":
                         tmp_file = "tmp"
 
                         create_workload_file(tmp_file, fieldlength, r_perc_str, i_perc_str, txt_file)
-                        restart_redis()
+                        if not testmode:
+                            restart_redis()
 
-                        cmd = "./bin/ycsb load redis -s -P " + tmp_file + " -p \"redis.host=127.0.0.1\" -p \"redis.port=6379\" -p \"redis.cluster=n\" -p \"redis.compress=" + yes_no + "\" -p \"redis.algo=" + algo + "\" -p \"redis.slave-count=0\" -p \"redis.sync=n\" > trash.txt"
-                        os.system(cmd)
+                        cmd = "./bin/ycsb load redis -s -P " + tmp_file + " -p \"redis.host=127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1\" -p \"redis.port=6379;6380;6381;6382;6383;6384\" -p \"redis.cluster=y\" -p \"redis.compress=" + yes_no + "\" -p \"redis.algo=" + algo + "\" -p \"redis.slave-count=1\" -p \"redis.sync=y\" > trash.txt"
+                        if not testmode:
+                            os.system(cmd)
 
                         cmd = "rm compress_rate.txt compress_time.txt decompress_time.txt"
-                        os.system(cmd)
+                        if not testmode:
+                            os.system(cmd)
 
                         print ""
                         print ""
                         print ""
                         with open(name + ".log", 'a') as logfile:
                             print >> logfile, "Running " + chart_name_prefix + " " + algo + " " + str(fieldlength) + " " + str(repeat)
-
-                        cmd = "./bin/ycsb run redis -s -P " + tmp_file + " -p \"redis.host=127.0.0.1\" -p \"redis.port=6379\" -p \"redis.cluster=n\" -p \"redis.compress=" + yes_no + "\" -p \"redis.algo=" + algo + "\" -p \"redis.slave-count=0\" -p \"redis.sync=n\" > result.txt"
+                        cmd = "./bin/ycsb run redis -s -P " + tmp_file + " -p \"redis.host=127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1;127.0.0.1\" -p \"redis.port=6379;6380;6381;6382;6383;6384\" -p \"redis.cluster=y\" -p \"redis.compress=" + yes_no + "\" -p \"redis.algo=" + algo + "\" -p \"redis.slave-count=1\" -p \"redis.sync=y\" > result.txt"
                         print cmd
-                        os.system(cmd)
+                        if not testmode:
+                            os.system(cmd)
 
                         total_compression_time += get_compression_time()
                         total_decompression_time += get_decompression_time()
